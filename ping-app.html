@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ping — Just the Two of Us</title>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --rose: #e8738a;
+    --rose-dark: #c45570;
+    --rose-light: #fce8ed;
+    --rose-pale: #fff5f7;
+    --text: #1a1218;
+    --text-muted: #7a6570;
+    --text-hint: #b8a8b0;
+    --bg: #fff9fa;
+    --surface: #ffffff;
+    --border: rgba(200,140,160,0.2);
+    --border-strong: rgba(200,140,160,0.4);
+    --green: #3dba7e;
+    --amber: #f0a020;
+    --red: #e05050;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: -30%;
+    right: -20%;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(232,115,138,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    bottom: -20%;
+    left: -15%;
+    width: 500px;
+    height: 500px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(232,115,138,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .app { width: 100%; max-width: 420px; position: relative; z-index: 1; }
+
+  .logo {
+    text-align: center;
+    margin-bottom: 2.5rem;
+  }
+  .logo-icon {
+    width: 56px; height: 56px;
+    background: var(--rose);
+    border-radius: 18px;
+    display: inline-flex; align-items: center; justify-content: center;
+    margin-bottom: 0.75rem;
+    box-shadow: 0 8px 24px rgba(232,115,138,0.35);
+  }
+  .logo-icon svg { width: 28px; height: 28px; fill: white; }
+  .logo h1 {
+    font-family: 'Lora', serif;
+    font-size: 28px;
+    font-weight: 400;
+    letter-spacing: -0.5px;
+    color: var(--text);
+  }
+  .logo p {
+    font-size: 13px;
+    color: var(--text-hint);
+    margin-top: 4px;
+    letter-spacing: 0.3px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 4px 32px rgba(180,100,120,0.08);
+  }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--text-hint);
+    margin-bottom: 0.75rem;
+  }
+
+  .room-field {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 1rem;
+  }
+  .room-field input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1px solid var(--border-strong);
+    border-radius: 10px;
+    font-size: 15px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    outline: none;
+    transition: border-color 0.2s;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .room-field input:focus { border-color: var(--rose); }
+  .room-field input::placeholder { letter-spacing: 0; text-transform: none; color: var(--text-hint); font-size: 13px; }
+
+  .btn {
+    padding: 10px 18px;
+    border-radius: 10px;
+    border: 1px solid var(--border-strong);
+    background: white;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .btn:hover { background: var(--rose-light); border-color: var(--rose); color: var(--rose); }
+
+  .btn-primary {
+    width: 100%;
+    padding: 13px;
+    background: var(--rose);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-top: 0.5rem;
+  }
+  .btn-primary:hover { background: var(--rose-dark); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(232,115,138,0.4); }
+  .btn-primary:active { transform: translateY(0); }
+  .btn-primary:disabled { background: var(--text-hint); cursor: not-allowed; transform: none; box-shadow: none; }
+
+  .divider {
+    display: flex; align-items: center; gap: 12px;
+    margin: 1.25rem 0;
+    color: var(--text-hint);
+    font-size: 12px;
+  }
+  .divider::before, .divider::after {
+    content: ''; flex: 1;
+    height: 1px; background: var(--border);
+  }
+
+  .status-bar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: var(--rose-pale);
+    border: 1px solid var(--border);
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 1.25rem;
+  }
+  .status-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--text-hint);
+    flex-shrink: 0;
+    transition: background 0.3s;
+  }
+  .status-dot.online { background: var(--green); box-shadow: 0 0 0 3px rgba(61,186,126,0.2); }
+  .status-dot.ringing { background: var(--amber); box-shadow: 0 0 0 3px rgba(240,160,32,0.2); animation: pulse 1s infinite; }
+  .status-dot.calling { background: var(--rose); box-shadow: 0 0 0 3px rgba(232,115,138,0.3); animation: pulse 1s infinite; }
+  .status-dot.in-call { background: var(--green); box-shadow: 0 0 0 3px rgba(61,186,126,0.2); }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .partner-zone {
+    text-align: center;
+    padding: 1.5rem 0;
+  }
+
+  .avatar {
+    width: 80px; height: 80px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--rose-light), var(--rose-pale));
+    border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 0.75rem;
+    font-family: 'Lora', serif;
+    font-size: 28px;
+    color: var(--rose);
+    position: relative;
+    transition: all 0.3s;
+  }
+  .avatar.ringing {
+    animation: ring-pulse 1.2s ease-in-out infinite;
+    border-color: var(--rose);
+  }
+  .avatar.in-call {
+    border-color: var(--green);
+    background: linear-gradient(135deg, #eafaf3, #f5fff9);
+  }
+
+  @keyframes ring-pulse {
+    0% { box-shadow: 0 0 0 0 rgba(232,115,138,0.4); }
+    70% { box-shadow: 0 0 0 20px rgba(232,115,138,0); }
+    100% { box-shadow: 0 0 0 0 rgba(232,115,138,0); }
+  }
+
+  .partner-name {
+    font-family: 'Lora', serif;
+    font-size: 20px;
+    font-weight: 400;
+    margin-bottom: 4px;
+  }
+  .partner-status {
+    font-size: 13px;
+    color: var(--text-hint);
+  }
+
+  .call-controls {
+    display: flex; gap: 12px; justify-content: center;
+    margin-top: 1.5rem;
+  }
+
+  .ctrl-btn {
+    width: 56px; height: 56px; border-radius: 50%;
+    border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+    font-size: 20px;
+  }
+  .ctrl-btn:hover { transform: scale(1.08); }
+  .ctrl-btn:active { transform: scale(0.95); }
+
+  .ctrl-btn.call {
+    background: var(--rose);
+    box-shadow: 0 6px 20px rgba(232,115,138,0.4);
+    width: 68px; height: 68px;
+  }
+  .ctrl-btn.call:hover { background: var(--rose-dark); box-shadow: 0 8px 28px rgba(232,115,138,0.5); }
+  .ctrl-btn.hangup { background: var(--red); box-shadow: 0 4px 16px rgba(224,80,80,0.3); }
+  .ctrl-btn.hangup:hover { background: #c03030; }
+  .ctrl-btn.answer { background: var(--green); box-shadow: 0 4px 16px rgba(61,186,126,0.3); }
+  .ctrl-btn.answer:hover { background: #2d9d67; }
+  .ctrl-btn.mute { background: var(--rose-pale); border: 1px solid var(--border-strong); color: var(--text-muted); }
+  .ctrl-btn.mute.active { background: var(--text); }
+  .ctrl-btn.mute.active svg { fill: white; }
+
+  .ctrl-btn svg { width: 24px; height: 24px; fill: white; }
+
+  .ring-overlay {
+    display: none;
+    position: fixed; inset: 0; z-index: 100;
+    background: rgba(255,240,244,0.95);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(8px);
+  }
+  .ring-overlay.active { display: flex; }
+
+  .ring-avatar {
+    width: 120px; height: 120px; border-radius: 50%;
+    background: linear-gradient(135deg, var(--rose-light), white);
+    border: 3px solid var(--rose);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Lora', serif;
+    font-size: 44px;
+    color: var(--rose);
+    margin-bottom: 1.5rem;
+    animation: ring-pulse 1.2s ease-in-out infinite;
+  }
+
+  .ring-label {
+    font-family: 'Lora', serif;
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-bottom: 0.25rem;
+    font-style: italic;
+  }
+  .ring-name {
+    font-family: 'Lora', serif;
+    font-size: 32px;
+    font-weight: 400;
+    margin-bottom: 0.5rem;
+  }
+  .ring-sub {
+    font-size: 14px;
+    color: var(--text-hint);
+    margin-bottom: 2.5rem;
+  }
+
+  .ring-btns {
+    display: flex; gap: 2rem;
+  }
+  .ring-btn-wrap {
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+  }
+  .ring-btn-label { font-size: 12px; color: var(--text-muted); }
+
+  .timer {
+    font-family: 'DM Sans', sans-serif;
+    font-variant-numeric: tabular-nums;
+    font-size: 13px;
+    color: var(--green);
+    font-weight: 500;
+  }
+
+  .setup-screen { }
+  .call-screen { display: none; }
+  .call-screen.active { display: block; }
+  .setup-screen.hidden { display: none; }
+
+  .room-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--rose-pale);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 1.25rem;
+    width: 100%;
+    justify-content: center;
+  }
+  .room-badge strong {
+    letter-spacing: 2px;
+    font-size: 13px;
+    color: var(--rose);
+    text-transform: uppercase;
+  }
+  .copy-btn {
+    margin-left: auto;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-hint);
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: 'DM Sans', sans-serif;
+    transition: color 0.15s;
+  }
+  .copy-btn:hover { color: var(--rose); }
+
+  .audio-visualizer {
+    display: flex; align-items: flex-end; justify-content: center;
+    gap: 3px; height: 32px;
+    margin: 1rem auto;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .audio-visualizer.active { opacity: 1; }
+  .viz-bar {
+    width: 3px; background: var(--rose); border-radius: 2px;
+    animation: viz 0.8s ease-in-out infinite;
+  }
+  .viz-bar:nth-child(1) { animation-delay: 0s; }
+  .viz-bar:nth-child(2) { animation-delay: 0.1s; }
+  .viz-bar:nth-child(3) { animation-delay: 0.2s; }
+  .viz-bar:nth-child(4) { animation-delay: 0.3s; }
+  .viz-bar:nth-child(5) { animation-delay: 0.4s; }
+  .viz-bar:nth-child(6) { animation-delay: 0.5s; }
+  .viz-bar:nth-child(7) { animation-delay: 0.4s; }
+  .viz-bar:nth-child(8) { animation-delay: 0.3s; }
+  .viz-bar:nth-child(9) { animation-delay: 0.2s; }
+
+  @keyframes viz {
+    0%, 100% { height: 4px; }
+    50% { height: 24px; }
+  }
+
+  audio { display: none; }
+
+  .toast {
+    position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%);
+    background: var(--text); color: white;
+    padding: 10px 20px; border-radius: 10px;
+    font-size: 13px;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.3s;
+    z-index: 200;
+    white-space: nowrap;
+  }
+  .toast.show { opacity: 1; }
+
+  .notification-banner {
+    display: none;
+    position: fixed; top: 1rem; left: 50%; transform: translateX(-50%);
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 18px;
+    box-shadow: 0 8px 32px rgba(180,100,120,0.15);
+    z-index: 150;
+    min-width: 280px;
+    animation: slideDown 0.3s ease;
+    cursor: pointer;
+  }
+  .notification-banner.show { display: block; }
+  @keyframes slideDown {
+    from { transform: translateX(-50%) translateY(-20px); opacity: 0; }
+    to { transform: translateX(-50%) translateY(0); opacity: 1; }
+  }
+  .notif-inner { display: flex; align-items: center; gap: 12px; }
+  .notif-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: var(--rose); display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .notif-icon svg { width: 18px; height: 18px; fill: white; }
+  .notif-text p:first-child { font-size: 13px; font-weight: 500; margin-bottom: 2px; }
+  .notif-text p:last-child { font-size: 12px; color: var(--text-muted); }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" opacity="0"/><path d="M20.01 15.38c-1.23.49-2.57.76-3.98.76-5.42 0-9.83-4.41-9.83-9.83 0-1.41.27-2.75.76-3.98C4.43 3.33 2 6.93 2 11.1 2 16.61 6.39 21 11.9 21c4.17 0 7.77-2.43 9.81-5.62-.2.007-.4.01-.6.01-.37 0-.74-.02-1.1-.01z" style="fill:white;opacity:0"/></svg>
+    </div>
+    <h1>Ping</h1>
+    <p>Just the two of you</p>
+  </div>
+
+  <!-- SETUP SCREEN -->
+  <div class="card setup-screen" id="setupScreen">
+    <div class="section-label">Your room code</div>
+    <div class="room-field">
+      <input type="text" id="myName" placeholder="Your nickname (e.g. Ria)" maxlength="20">
+    </div>
+    <div class="room-field">
+      <input type="text" id="roomInput" placeholder="Room code (e.g. RIYA)" maxlength="8" style="text-transform:uppercase">
+      <button class="btn" onclick="generateRoom()">Generate</button>
+    </div>
+    <p style="font-size:12px; color:var(--text-hint); margin-bottom:1rem; line-height:1.6">
+      Share the room code with your partner. Both of you join the same code to connect.
+    </p>
+    <button class="btn-primary" id="joinBtn" onclick="joinRoom()">Enter Room</button>
+  </div>
+
+  <!-- CALL SCREEN -->
+  <div class="card call-screen" id="callScreen">
+    <div class="room-badge">
+      <span>Room</span>
+      <strong id="roomDisplay"></strong>
+      <button class="copy-btn" onclick="copyRoom()">copy link</button>
+    </div>
+
+    <div class="status-bar">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusText">Connecting…</span>
+      <span class="timer" id="callTimer" style="margin-left:auto; display:none"></span>
+    </div>
+
+    <div class="partner-zone">
+      <div class="avatar" id="partnerAvatar">?</div>
+      <div class="partner-name" id="partnerName">Waiting…</div>
+      <div class="partner-status" id="partnerStatus">Your partner hasn't joined yet</div>
+      <div class="audio-visualizer" id="audioViz">
+        <div class="viz-bar"></div>
+        <div class="viz-bar"></div>
+        <div class="viz-bar"></div>
+        <div class="viz-bar"></div>
+        <div class="viz-bar"></div>
+        <div class="viz-bar"></div>
+        <div class="viz-bar"></div>
+        <div class="viz-bar"></div>
+        <div class="viz-bar"></div>
+      </div>
+    </div>
+
+    <div class="call-controls" id="callControls">
+      <button class="ctrl-btn call" id="callBtn" onclick="initiateCall()" title="Ring partner">
+        <svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+      </button>
+      <button class="ctrl-btn mute" id="muteBtn" onclick="toggleMute()" title="Mute" style="display:none">
+        <svg viewBox="0 0 24 24" id="muteIcon"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45-1-1-1s-1-.45-1-1V5zM17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+      </button>
+      <button class="ctrl-btn hangup" id="hangupBtn" onclick="hangup()" title="End call" style="display:none">
+        <svg viewBox="0 0 24 24"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08c-.18-.17-.29-.42-.29-.7 0-.28.11-.53.29-.71C3.34 8.78 7.46 7 12 7s8.66 1.78 11.71 4.67c.18.18.29.43.29.71 0 .28-.11.53-.29.71l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.1-.7-.28-.79-.73-1.68-1.36-2.66-1.85-.33-.16-.56-.51-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Incoming Call Overlay -->
+<div class="ring-overlay" id="ringOverlay">
+  <div class="ring-avatar" id="ringAvatar">?</div>
+  <p class="ring-label">incoming ping from</p>
+  <p class="ring-name" id="ringName">Someone</p>
+  <p class="ring-sub">wants to talk to you ♥</p>
+  <div class="ring-btns">
+    <div class="ring-btn-wrap">
+      <button class="ctrl-btn hangup" onclick="rejectCall()">
+        <svg viewBox="0 0 24 24" fill="white"><path d="M12 9c-1.6 0-3.15.25-4.6.72v3.1c0 .39-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08c-.18-.17-.29-.42-.29-.7 0-.28.11-.53.29-.71C3.34 8.78 7.46 7 12 7s8.66 1.78 11.71 4.67c.18.18.29.43.29.71 0 .28-.11.53-.29.71l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.1-.7-.28-.79-.73-1.68-1.36-2.66-1.85-.33-.16-.56-.51-.56-.9v-3.1C15.15 9.25 13.6 9 12 9z"/></svg>
+      </button>
+      <span class="ring-btn-label">Decline</span>
+    </div>
+    <div class="ring-btn-wrap">
+      <button class="ctrl-btn answer" onclick="answerCall()">
+        <svg viewBox="0 0 24 24" fill="white"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+      </button>
+      <span class="ring-btn-label">Answer</span>
+    </div>
+  </div>
+</div>
+
+<!-- Browser notification banner simulation -->
+<div class="notification-banner" id="notifBanner" onclick="answerFromBanner()">
+  <div class="notif-inner">
+    <div class="notif-icon">
+      <svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+    </div>
+    <div class="notif-text">
+      <p id="notifTitle">Incoming Call</p>
+      <p id="notifSub">is ringing you on Ping · Tap to answer</p>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<audio id="ringAudio" loop></audio>
+<audio id="remoteAudio" autoplay></audio>
+
+<script>
+let peer, myPeerId, partnerPeerId;
+let currentCall = null;
+let incomingCall = null;
+let myName = '';
+let partnerName = '';
+let roomCode = '';
+let dataConn = null;
+let callTimerInterval = null;
+let callSeconds = 0;
+let isMuted = false;
+let localStream = null;
+let isPartnerOnline = false;
+
+let ringCtx = null;
+let ringInterval = null;
+
+function generateRoom() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+  let code = '';
+  for (let i = 0; i < 4; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  document.getElementById('roomInput').value = code;
+}
+
+function joinRoom() {
+  myName = document.getElementById('myName').value.trim();
+  roomCode = document.getElementById('roomInput').value.trim().toUpperCase();
+  if (!myName) { showToast('Enter your nickname first'); return; }
+  if (!roomCode || roomCode.length < 2) { showToast('Enter a room code'); return; }
+
+  if (!ringCtx) {
+    try {
+      ringCtx = new (window.AudioContext || window.webkitAudioContext)();
+    } catch(e) {}
+  }
+  if (ringCtx && ringCtx.state === 'suspended') {
+    ringCtx.resume();
+  }
+
+  document.getElementById('joinBtn').disabled = true;
+  document.getElementById('joinBtn').textContent = 'Connecting…';
+
+  initPeer();
+}
+
+function initPeer() {
+  const peerId = 'ping-room-' + roomCode + '-A';
+
+  peer = new Peer(peerId, {
+    config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }
+  });
+
+  peer.on('open', (id) => {
+    myPeerId = id;
+    showCallScreen();
+    setStatus('online', 'You\'re in the room — share the code with your partner');
+
+    peer.on('connection', (conn) => {
+      dataConn = conn;
+      partnerPeerId = conn.peer;
+      const onOpen = () => {
+        conn.send({ type: 'hello', name: myName });
+        setPartnerOnline(true);
+      };
+      if (conn.open) onOpen();
+      else conn.on('open', onOpen);
+
+      conn.on('data', handleData);
+      conn.on('close', () => setPartnerOnline(false));
+    });
+
+    peer.on('call', (call) => {
+      incomingCall = call;
+      showIncomingRing(partnerName || 'Your partner');
+    });
+  });
+
+  peer.on('error', (err) => {
+    if (err.type === 'unavailable-id') {
+      tryAsSecondPeer();
+    } else {
+      showToast('Connection error. Try again.');
+      resetSetup();
+    }
+  });
+}
+
+function tryAsSecondPeer() {
+  if (peer) peer.destroy();
+  const peerId = 'ping-room-' + roomCode + '-B';
+  const partnerId = 'ping-room-' + roomCode + '-A';
+
+  peer = new Peer(peerId, {
+    config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] }
+  });
+
+  peer.on('open', (id) => {
+    myPeerId = id;
+    showCallScreen();
+
+    partnerPeerId = partnerId;
+    connectData(partnerId);
+
+    peer.on('connection', (conn) => {
+      dataConn = conn;
+      partnerPeerId = conn.peer;
+      const onOpen = () => {
+        conn.send({ type: 'hello', name: myName });
+        setPartnerOnline(true);
+      };
+      if (conn.open) onOpen();
+      else conn.on('open', onOpen);
+
+      conn.on('data', handleData);
+      conn.on('close', () => setPartnerOnline(false));
+    });
+
+    peer.on('call', (call) => {
+      incomingCall = call;
+      showIncomingRing(partnerName || 'Your partner');
+    });
+
+    setStatus('online', 'You\'re in the room — ready to call');
+  });
+
+  peer.on('error', (err) => {
+    if (err.type === 'unavailable-id') {
+      showToast('Room is full (max 2 people).');
+    } else {
+      showToast('Connection error. Try a different room code.');
+    }
+    resetSetup();
+  });
+}
+
+function connectData(targetId) {
+  const conn = peer.connect(targetId, { reliable: true });
+  dataConn = conn;
+  
+  const onOpen = () => {
+    conn.send({ type: 'hello', name: myName });
+    setPartnerOnline(true);
+  };
+  
+  if (conn.open) onOpen();
+  else conn.on('open', onOpen);
+  
+  conn.on('data', handleData);
+  conn.on('close', () => setPartnerOnline(false));
+  partnerPeerId = targetId;
+}
+
+function handleData(data) {
+  if (data.type === 'hello') {
+    partnerName = data.name;
+    setPartnerOnline(true);
+    if (!partnerPeerId) {
+      partnerPeerId = dataConn.peer;
+    }
+  } else if (data.type === 'ring') {
+    partnerName = data.name || partnerName;
+    showIncomingRing(partnerName);
+  } else if (data.type === 'reject') {
+    stopRingTone();
+    showToast(partnerName + ' is busy right now');
+    resetCallUI();
+    document.getElementById('partnerAvatar').classList.remove('ringing');
+    document.getElementById('partnerStatus').textContent = 'Online and waiting';
+    setStatus('online', partnerName + ' is here \u2665');
+  } else if (data.type === 'end-call') {
+    if (currentCall || incomingCall || document.getElementById('ringOverlay').classList.contains('active')) {
+      showToast('Call ended / cancelled');
+      hangup(true);
+    } else {
+      hideRingOverlay();
+      resetCallUI();
+      document.getElementById('partnerAvatar').classList.remove('ringing');
+      document.getElementById('partnerStatus').textContent = 'Online and waiting';
+      setStatus('online', partnerName + ' is here \u2665');
+    }
+  }
+}
+
+function setPartnerOnline(online) {
+  isPartnerOnline = online;
+  if (online) {
+    if (!currentCall && !incomingCall && !document.getElementById('ringOverlay').classList.contains('active')) {
+      setStatus('online', partnerName + ' is here \u2665');
+      document.getElementById('partnerStatus').textContent = 'Online and waiting';
+    }
+    document.getElementById('partnerAvatar').textContent = partnerName ? partnerName[0].toUpperCase() : '\u2665';
+    document.getElementById('partnerName').textContent = partnerName || 'Your partner';
+  } else {
+    partnerName = '';
+    setStatus('', 'Waiting for your partner to join…');
+    document.getElementById('partnerAvatar').textContent = '?';
+    document.getElementById('partnerName').textContent = 'Waiting…';
+    document.getElementById('partnerStatus').textContent = 'Your partner hasn\'t joined yet';
+  }
+}
+
+function showCallScreen() {
+  document.getElementById('setupScreen').classList.add('hidden');
+  document.getElementById('callScreen').classList.add('active');
+  document.getElementById('roomDisplay').textContent = roomCode;
+  document.getElementById('partnerAvatar').textContent = '?';
+}
+
+function initiateCall() {
+  if (!isPartnerOnline) { showToast('Your partner isn\'t online yet'); return; }
+  if (!partnerPeerId) { showToast('Reconnecting…'); return; }
+
+  if (dataConn && dataConn.open) {
+    dataConn.send({ type: 'ring', name: myName });
+  }
+
+  playRingTone(false);
+  setStatus('calling', 'Ringing ' + partnerName + '…');
+  document.getElementById('partnerAvatar').classList.add('ringing');
+  document.getElementById('partnerStatus').textContent = 'Ringing…';
+  document.getElementById('callBtn').style.display = 'none';
+  document.getElementById('hangupBtn').style.display = 'flex';
+
+  navigator.mediaDevices.getUserMedia({ audio: true })
+    .then(stream => {
+      localStream = stream;
+      currentCall = peer.call(partnerPeerId, stream);
+      currentCall.on('stream', (remoteStream) => {
+        document.getElementById('remoteAudio').srcObject = remoteStream;
+        stopRingTone();
+        onCallConnected();
+      });
+      currentCall.on('close', () => hangup(true));
+      currentCall.on('error', () => {
+        showToast('Call failed');
+        hangup(true);
+      });
+    })
+    .catch(() => {
+      showToast('Mic access denied — please allow microphone');
+      hangup();
+    });
+}
+
+function showIncomingRing(name) {
+  if (document.getElementById('ringOverlay').classList.contains('active')) return;
+  document.getElementById('ringAvatar').textContent = name ? name[0].toUpperCase() : '\u2665';
+  document.getElementById('ringName').textContent = name;
+  document.getElementById('notifTitle').textContent = name + ' is calling';
+  document.getElementById('ringOverlay').classList.add('active');
+  document.getElementById('notifBanner').classList.add('show');
+  playRingTone(true);
+
+  if (window.Notification && Notification.permission === 'granted') {
+    new Notification('\uD83D\uDCDE ' + name + ' is pinging you!', {
+      body: 'Tap to answer on Ping',
+      icon: ''
+    });
+  }
+
+  setTimeout(() => {
+    document.getElementById('notifBanner').classList.remove('show');
+  }, 6000);
+}
+
+function answerCall() {
+  if (!incomingCall) return;
+  stopRingTone();
+  document.getElementById('ringOverlay').classList.remove('active');
+  document.getElementById('notifBanner').classList.remove('show');
+
+  navigator.mediaDevices.getUserMedia({ audio: true })
+    .then(stream => {
+      localStream = stream;
+      incomingCall.answer(stream);
+      incomingCall.on('stream', (remoteStream) => {
+        document.getElementById('remoteAudio').srcObject = remoteStream;
+        onCallConnected();
+      });
+      incomingCall.on('close', () => hangup(true));
+      currentCall = incomingCall;
+    })
+    .catch(() => {
+       showToast('Mic access needed to answer');
+       rejectCall();
+    });
+}
+
+function answerFromBanner() {
+  answerCall();
+}
+
+function rejectCall() {
+  hideRingOverlay();
+  if (dataConn && dataConn.open) {
+    dataConn.send({ type: 'reject' });
+  }
+  if (incomingCall) {
+    try { incomingCall.close(); } catch(e) {}
+  }
+  incomingCall = null;
+}
+
+function hideRingOverlay() {
+  document.getElementById('ringOverlay').classList.remove('active');
+  document.getElementById('notifBanner').classList.remove('show');
+  stopRingTone();
+}
+
+function onCallConnected() {
+  setStatus('in-call', 'In call');
+  document.getElementById('partnerAvatar').classList.remove('ringing');
+  document.getElementById('partnerAvatar').classList.add('in-call');
+  document.getElementById('partnerStatus').textContent = 'Connected \u2665';
+  document.getElementById('muteBtn').style.display = 'flex';
+  document.getElementById('hangupBtn').style.display = 'flex';
+  document.getElementById('callBtn').style.display = 'none';
+  document.getElementById('audioViz').classList.add('active');
+  document.getElementById('callTimer').style.display = '';
+  startCallTimer();
+}
+
+function hangup(isRemote = false) {
+  hideRingOverlay();
+  if (currentCall) { try { currentCall.close(); } catch(e){} }
+  if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+  if (!isRemote && dataConn && dataConn.open) dataConn.send({ type: 'end-call' });
+  
+  stopCallTimer();
+  resetCallUI();
+  if (isPartnerOnline) {
+    setStatus('online', partnerName + ' is here \u2665');
+    document.getElementById('partnerStatus').textContent = 'Online and waiting';
+  } else {
+    setStatus('', 'Waiting for your partner to join…');
+    document.getElementById('partnerStatus').textContent = 'Your partner hasn\'t joined yet';
+  }
+  document.getElementById('audioViz').classList.remove('active');
+  document.getElementById('partnerAvatar').classList.remove('ringing', 'in-call');
+  currentCall = null;
+  incomingCall = null;
+}
+
+function resetCallUI() {
+  document.getElementById('callBtn').style.display = 'flex';
+  document.getElementById('hangupBtn').style.display = 'none';
+  document.getElementById('muteBtn').style.display = 'none';
+  document.getElementById('callTimer').style.display = 'none';
+  isMuted = false;
+  document.getElementById('muteBtn').classList.remove('active');
+  document.getElementById('muteBtn').title = 'Mute';
+}
+
+function toggleMute() {
+  if (!localStream) return;
+  isMuted = !isMuted;
+  localStream.getAudioTracks().forEach(t => t.enabled = !isMuted);
+  const btn = document.getElementById('muteBtn');
+  btn.classList.toggle('active', isMuted);
+  btn.title = isMuted ? 'Unmute' : 'Mute';
+}
+
+function startCallTimer() {
+  callSeconds = 0;
+  clearInterval(callTimerInterval);
+  document.getElementById('callTimer').textContent = '00:00';
+  callTimerInterval = setInterval(() => {
+    callSeconds++;
+    const m = Math.floor(callSeconds / 60).toString().padStart(2,'0');
+    const s = (callSeconds % 60).toString().padStart(2,'0');
+    document.getElementById('callTimer').textContent = m + ':' + s;
+  }, 1000);
+}
+
+function stopCallTimer() {
+  clearInterval(callTimerInterval);
+  document.getElementById('callTimer').textContent = '';
+}
+
+function setStatus(type, text) {
+  const dot = document.getElementById('statusDot');
+  dot.className = 'status-dot';
+  if (type) dot.classList.add(type);
+  document.getElementById('statusText').textContent = text;
+}
+
+function playRingTone(isIncoming) {
+  stopRingTone();
+  if (!ringCtx) {
+    try {
+      ringCtx = new (window.AudioContext || window.webkitAudioContext)();
+    } catch(e) {}
+  }
+  if (ringCtx && ringCtx.state === 'suspended') {
+    ringCtx.resume();
+  }
+
+  const playBeep = (freq, start, dur) => {
+    if (!ringCtx || ringCtx.state === 'closed') return;
+    try {
+      const osc = ringCtx.createOscillator();
+      const gain = ringCtx.createGain();
+      osc.connect(gain); gain.connect(ringCtx.destination);
+      osc.frequency.value = freq;
+      osc.type = 'sine';
+      gain.gain.setValueAtTime(0, ringCtx.currentTime + start);
+      gain.gain.linearRampToValueAtTime(0.3, ringCtx.currentTime + start + 0.01);
+      gain.gain.linearRampToValueAtTime(0, ringCtx.currentTime + start + dur);
+      osc.start(ringCtx.currentTime + start);
+      osc.stop(ringCtx.currentTime + start + dur + 0.01);
+    } catch(e) {}
+  };
+
+  const ringOnce = () => {
+    if (!ringCtx) return;
+    if (isIncoming) {
+      playBeep(880, 0, 0.15);
+      playBeep(1100, 0.2, 0.15);
+      playBeep(880, 0.4, 0.15);
+      playBeep(1100, 0.6, 0.15);
+    } else {
+      playBeep(440, 0, 0.4);
+      playBeep(440, 0.6, 0.4);
+    }
+  };
+
+  ringOnce();
+  ringInterval = setInterval(ringOnce, 2000);
+}
+
+function stopRingTone() {
+  clearInterval(ringInterval);
+}
+
+function copyRoom() {
+  const url = window.location.href.split('?')[0] + '?room=' + roomCode;
+  navigator.clipboard.writeText(url).then(() => showToast('Link copied! Send it to your partner'));
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+function resetSetup() {
+  document.getElementById('joinBtn').disabled = false;
+  document.getElementById('joinBtn').textContent = 'Enter Room';
+}
+
+window.addEventListener('load', () => {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('room')) {
+    document.getElementById('roomInput').value = params.get('room').toUpperCase();
+  }
+
+  document.body.addEventListener('click', () => {
+    if (window.Notification && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }, { once: true });
+});
+</script>
+</body>
+</html>
